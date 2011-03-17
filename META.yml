@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Compress-Deflate7
-version:            0.9
+version:            1.0
 abstract:           Perl interface to 7-Zip's deflate compressor
 author:
     - Bjoern Hoehrmann <bjoern@hoehrmann.de>

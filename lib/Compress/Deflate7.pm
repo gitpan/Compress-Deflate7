@@ -18,7 +18,7 @@ our @EXPORT = qw(
 	
 );
 
-our $VERSION = '0.9';
+our $VERSION = '1.0';
 
 require XSLoader;
 XSLoader::load('Compress::Deflate7', $VERSION);
@@ -30,7 +30,9 @@ sub _withArgs {
   $o{Algorithm} //= 0;
   $o{FastBytes} //= 32;
   $o{Pass} //= 1;
-  $sub->($data, $o{Algorithm}, $o{Pass}, $o{FastBytes});
+  $o{Cycles} //= 0;
+
+  $sub->($data, $o{Algorithm}, $o{Pass}, $o{FastBytes}, $o{Cycles});
 }
 
 sub zlib7 {
@@ -58,7 +60,8 @@ Compress::Deflate7 - Perl interface to 7-Zip's deflate compressor
     "...",
     Algorithm => 1,
     Pass => 10,
-    FastBytes => 128
+    FastBytes => 128,
+    Cycles => 0,
   );
 
 =head1 DESCRIPTION
@@ -75,9 +78,11 @@ The functions C<deflate7> and C<zlib7> on request, none by default.
 
 Both functions allow several options to succeed the data parameter.
 The C<Algorithm> option can be set to C<0> or C<1>, the C<Pass>
-option can be set to C<1> through C<15>, and C<FastBytes> can be set
-to C<3> through C<258>. The C<-mx=9> mode in C<7za> sets Algorithm
-to 1, Pass to 10, FastBytes to 128. The default is 0, 1, 32.
+option can be set to C<1> through C<15>, C<FastBytes> can be set
+to C<3> through C<258>, and C<Cycles> can be set to any positive
+integer. The C<-mx=9> mode in C<7za> sets Algorithm
+to 1, Pass to 10, FastBytes to 128, and Cycles to 0. The default is
+0, 1, 32, 0.
 
 =head1 SEE ALSO
 

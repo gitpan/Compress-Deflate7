@@ -12,12 +12,13 @@ extern "C"
 #include "XSUB.h"
 }
 
-void setCoderProps(NCompress::NDeflate::NEncoder::CCOMCoder* c, unsigned int algo, unsigned int pass, unsigned int fast) {
+void setCoderProps(NCompress::NDeflate::NEncoder::CCOMCoder* c, unsigned int algo, unsigned int pass, unsigned int fast, unsigned int cycles) {
   HRESULT hr;
   PROPVARIANT v;
   PROPID algoProp = NCoderPropID::kAlgorithm;
   PROPID passProp = NCoderPropID::kNumPasses;
   PROPID fastProp = NCoderPropID::kNumFastBytes;
+  PROPID cyclProp = NCoderPropID::kMatchFinderCycles;
 
   v.vt = VT_UI4;
 
@@ -36,10 +37,15 @@ void setCoderProps(NCompress::NDeflate::NEncoder::CCOMCoder* c, unsigned int alg
   v.ulVal = fast;
   hr = c->SetCoderProperties(&fastProp, &v, 1);
   if (hr != S_OK)
-    croak("Bad pass value");
+    croak("Bad fast value");
+
+  v.ulVal = cycles;
+  hr = c->SetCoderProperties(&cyclProp, &v, 1);
+  if (hr != S_OK)
+    croak("Bad cycles value");
 }
 
-SV* internalZlib7(const char* data, size_t len, unsigned int algo, unsigned int pass, unsigned int fast) {
+SV* internalZlib7(const char* data, size_t len, unsigned int algo, unsigned int pass, unsigned int fast, unsigned int cycles) {
 
   NCompress::NZlib::CEncoder c;
   CBufInStream* inStream = new CBufInStream;
@@ -52,7 +58,7 @@ SV* internalZlib7(const char* data, size_t len, unsigned int algo, unsigned int 
 
   c.Create();
 
-  setCoderProps(c.DeflateEncoderSpec, algo, pass, fast);
+  setCoderProps(c.DeflateEncoderSpec, algo, pass, fast, cycles);
 
   c.Code(in, out, NULL, NULL, NULL);
 
@@ -60,7 +66,7 @@ SV* internalZlib7(const char* data, size_t len, unsigned int algo, unsigned int 
   return newSVpvn(deflated, outStream->GetSize());
 }
 
-SV* internalDeflate7(const char* data, size_t len, unsigned int algo, unsigned int pass, unsigned int fast) {
+SV* internalDeflate7(const char* data, size_t len, unsigned int algo, unsigned int pass, unsigned int fast, unsigned int cycles) {
 
   // TODO: Factor the common code
 
@@ -73,7 +79,7 @@ SV* internalDeflate7(const char* data, size_t len, unsigned int algo, unsigned i
   CMyComPtr<ISequentialInStream> in(inStream);
   CMyComPtr<ISequentialOutStream> out(outStream);
 
-  setCoderProps(&c, algo, pass, fast);
+  setCoderProps(&c, algo, pass, fast, cycles);
 
   c.Code(in, out, NULL, NULL, NULL);
 
@@ -85,27 +91,29 @@ SV* internalDeflate7(const char* data, size_t len, unsigned int algo, unsigned i
 MODULE = Compress::Deflate7		PACKAGE = Compress::Deflate7		
 
 void
-_zlib7(sv, algo, pass, fb)
+_zlib7(sv, algo, pass, fb, cycles)
     SV* sv
     unsigned int algo
     unsigned int pass
     unsigned int fb
+    unsigned int cycles
   PREINIT:
     STRLEN len;
     char* data;
   PPCODE:
     data = SvPVbyte(sv, len);
-    mXPUSHs(internalZlib7(data, len, algo, pass, fb));
+    mXPUSHs(internalZlib7(data, len, algo, pass, fb, cycles));
 
 void
-_deflate7(sv, algo, pass, fb)
+_deflate7(sv, algo, pass, fb, cycles)
     SV* sv
     unsigned int algo
     unsigned int pass
     unsigned int fb
+    unsigned int cycles
   PREINIT:
     STRLEN len;
     char* data;
   PPCODE:
     data = SvPVbyte(sv, len);
-    mXPUSHs(internalDeflate7(data, len, algo, pass, fb));
+    mXPUSHs(internalDeflate7(data, len, algo, pass, fb, cycles));

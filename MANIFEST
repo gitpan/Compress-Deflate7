@@ -1102,6 +1102,7 @@ README
 lib/Compress/Deflate7.pm
 t/00basic.t
 t/01simple.t
+t/02cycles.t
 t/98podsyn.t
 t/99podcov.t
 META.yml                                 Module meta-data (added by MakeMaker)
